@@ -65,3 +65,25 @@ fn main() {
     let days = days_between_dates(2023, 10, 6, 2023, 10, 10);
     println!("Number of days between the dates: {}", days);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_days_between_dates() {
+        assert_eq!(days_between_dates(2013, 1, 1, 2014, 1, 1), 365);
+        assert_eq!(days_between_dates(2012, 1, 1, 2013, 1, 1), 366);
+        assert_eq!(days_between_dates(2012, 9, 1, 2012, 9, 4), 3);
+        assert_eq!(days_between_dates(2011, 6, 30, 2012, 6, 30), 366);
+        assert_eq!(days_between_dates(2011, 1, 1, 2012, 8, 8), 585);
+    }
+
+    #[test]
+    fn test_is_leap_year() {
+        assert!(is_leap_year(2012));
+        assert!(is_leap_year(2000));
+        assert!(!is_leap_year(1900));
+        assert!(!is_leap_year(2013));
+    }
+}
