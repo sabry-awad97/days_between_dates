@@ -1,60 +1,59 @@
 use std::cmp::Ordering;
 
-fn is_leap_year(year: i32) -> bool {
-    (year % 4 == 0 && year % 100 != 0) || year % 400 == 0
+#[derive(Debug)]
+struct Date {
+    year: i32,
+    month: i32,
+    day: i32,
 }
 
-fn days_in_month(year: i32, month: i32) -> i32 {
-    match month {
-        2 if is_leap_year(year) => 29,
-        2 => 28,
-        4 | 6 | 9 | 11 => 30,
-        _ => 31,
+impl Date {
+    fn new(year: i32, month: i32, day: i32) -> Self {
+        Self { year, month, day }
     }
-}
 
-fn next_day(year: i32, month: i32, day: i32) -> (i32, i32, i32) {
-    if day < days_in_month(year, month) {
-        (year, month, day + 1)
-    } else if month < 12 {
-        (year, month + 1, 1)
-    } else {
-        (year + 1, 1, 1)
+    fn is_leap_year(&self) -> bool {
+        (self.year % 4 == 0 && self.year % 100 != 0) || self.year % 400 == 0
     }
-}
 
-fn date_is_before(year1: i32, month1: i32, day1: i32, year2: i32, month2: i32, day2: i32) -> bool {
-    match year1.cmp(&year2) {
-        Ordering::Greater => false,
-        Ordering::Less => true,
-        Ordering::Equal => match month1.cmp(&month2) {
+    fn days_in_month(&self) -> i32 {
+        match self.month {
+            2 if self.is_leap_year() => 29,
+            2 => 28,
+            4 | 6 | 9 | 11 => 30,
+            _ => 31,
+        }
+    }
+
+    fn next_day(&self) -> Self {
+        if self.day < self.days_in_month() {
+            Self::new(self.year, self.month, self.day + 1)
+        } else if self.month < 12 {
+            Self::new(self.year, self.month + 1, 1)
+        } else {
+            Self::new(self.year + 1, 1, 1)
+        }
+    }
+
+    fn is_before(&self, other: &Self) -> bool {
+        match self.year.cmp(&other.year) {
             Ordering::Greater => false,
             Ordering::Less => true,
-            Ordering::Equal => day1 < day2,
-        },
+            Ordering::Equal => match self.month.cmp(&other.month) {
+                Ordering::Greater => false,
+                Ordering::Less => true,
+                Ordering::Equal => self.day < other.day,
+            },
+        }
     }
 }
 
-fn days_between_dates(
-    year1: i32,
-    month1: i32,
-    day1: i32,
-    year2: i32,
-    month2: i32,
-    day2: i32,
-) -> i32 {
+fn days_between_dates(start_date: Date, end_date: Date) -> i32 {
     let mut days = 0;
-    let mut current_date = (year1, month1, day1);
+    let mut current_date = start_date;
 
-    while date_is_before(
-        current_date.0,
-        current_date.1,
-        current_date.2,
-        year2,
-        month2,
-        day2,
-    ) {
-        current_date = next_day(current_date.0, current_date.1, current_date.2);
+    while current_date.is_before(&end_date) {
+        current_date = current_date.next_day();
         days += 1;
     }
 
@@ -62,7 +61,10 @@ fn days_between_dates(
 }
 
 fn main() {
-    let days = days_between_dates(2023, 10, 6, 2023, 10, 10);
+    let start_date = Date::new(2023, 10, 6);
+    let end_date = Date::new(2023, 10, 10);
+
+    let days = days_between_dates(start_date, end_date);
     println!("Number of days between the dates: {}", days);
 }
 
@@ -72,18 +74,33 @@ mod tests {
 
     #[test]
     fn test_days_between_dates() {
-        assert_eq!(days_between_dates(2013, 1, 1, 2014, 1, 1), 365);
-        assert_eq!(days_between_dates(2012, 1, 1, 2013, 1, 1), 366);
-        assert_eq!(days_between_dates(2012, 9, 1, 2012, 9, 4), 3);
-        assert_eq!(days_between_dates(2011, 6, 30, 2012, 6, 30), 366);
-        assert_eq!(days_between_dates(2011, 1, 1, 2012, 8, 8), 585);
+        assert_eq!(
+            days_between_dates(Date::new(2013, 1, 1), Date::new(2014, 1, 1)),
+            365
+        );
+        assert_eq!(
+            days_between_dates(Date::new(2012, 1, 1), Date::new(2013, 1, 1)),
+            366
+        );
+        assert_eq!(
+            days_between_dates(Date::new(2012, 9, 1), Date::new(2012, 9, 4)),
+            3
+        );
+        assert_eq!(
+            days_between_dates(Date::new(2011, 6, 30), Date::new(2012, 6, 30)),
+            366
+        );
+        assert_eq!(
+            days_between_dates(Date::new(2011, 1, 1), Date::new(2012, 8, 8)),
+            585
+        );
     }
 
     #[test]
     fn test_is_leap_year() {
-        assert!(is_leap_year(2012));
-        assert!(is_leap_year(2000));
-        assert!(!is_leap_year(1900));
-        assert!(!is_leap_year(2013));
+        assert!(Date::new(2012, 1, 1).is_leap_year());
+        assert!(Date::new(2000, 1, 1).is_leap_year());
+        assert!(!Date::new(1900, 1, 1).is_leap_year());
+        assert!(!Date::new(2013, 1, 1).is_leap_year());
     }
 }
